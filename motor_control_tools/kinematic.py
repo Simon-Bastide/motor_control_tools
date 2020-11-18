@@ -234,10 +234,6 @@ def travelled_distance(vel, sample_rate):
     """Retourne la distance parcourue en fonction du temps"""
     return np.concatenate(([0], np.cumsum(vel)))/sample_rate
 
-def diff_keep_length(signal, sample_rate):
-    """Derive en conservant la longueur du signal. La dérnière valeur est doublée"""
-    signal_dot = np.diff(signal)*sample_rate
-    return np.append(signal_dot,signal_dot[-1])
 
 def fit_line_direction(points):
     direction = list()

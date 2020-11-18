@@ -1,18 +1,6 @@
-# File name : basic_tools.py
-# Author : Simon Bastide
-# Encoding : utf-8
-# Function : Common basic tools 
-################################################################################
-
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from scipy import signal
-from scipy import interpolate
-from datetime import datetime
-
-def get_date_iso():
-    return (datetime.now().replace().isoformat()).split('T')[0]
+import scipy as sp
 
 
 def filter(data, sample_rate, low_pass = 10, order = 4):
@@ -22,7 +10,7 @@ def filter(data, sample_rate, low_pass = 10, order = 4):
     try:
         data = np.array(data)
         low_pass = low_pass/(sample_rate/2)
-        b, a = signal.butter(order, low_pass, btype = 'lowpass')
+        b, a = sp.signal.butter(order, low_pass, btype = 'lowpass')
         data_filtered = np.zeros(data.shape)
         if len(data.shape) > 1:
             #Supression des nan en fin de signal 
@@ -31,14 +19,14 @@ def filter(data, sample_rate, low_pass = 10, order = 4):
                 data_filtered = data_filtered[:-1,:]
             data = np.nan_to_num(data)
             for col in range(data.shape[1]):
-                data_filtered[:,col] = signal.filtfilt(b, a, data[:,col])
+                data_filtered[:,col] = sp.signal.filtfilt(b, a, data[:,col])
         else:
             while np.isnan(data[-1]):
                 data = data[:-1]
                 data_filtered = data_filtered[:-1]
             data = np.nan_to_num(data)
             
-            data_filtered = signal.filtfilt(b, a, data)
+            data_filtered = sp.signal.filtfilt(b, a, data)
         if np.isnan(data_filtered).any():
             print("Output contain NaN")
 
@@ -46,35 +34,6 @@ def filter(data, sample_rate, low_pass = 10, order = 4):
         print("Value Error, output will be full of 0")
         data_filtered =  np.full(1000,0)
     return data_filtered
-    
-
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return array[idx],idx
-
-def cm2inch(*tupl):
-    inch = 2.54
-    if isinstance(tupl[0], tuple):
-        return tuple(i/inch for i in tupl[0])
-    else:
-        return tuple(i/inch for i in tupl)
-
-def match(s1, s2):
-    # Check if two string match allowing one character difference
-    # https://stackoverflow.com/questions/25216328/compare-strings-allowing-one-character-difference
-    # Solution from Marco Sulla
-    ok = False
-
-    for c1, c2 in zip(s1, s2):
-        if c1 != c2:
-            if ok:
-                return False
-            else:
-                ok = True
-
-    return ok
 
 
 # DISCLAIMER: This function is copied from https://github.com/nwhitehead/swmixer/blob/master/swmixer.py, 
@@ -107,10 +66,15 @@ def resample_non_uniform(x, y, new_sample_rate):
         x (numpy.array): non-uniform time (in s)
         y (numpy array): signal
     """
-    f = interpolate.interp1d(x, y)
+    f = sp.interpolate.interp1d(x, y)
     sample_rate = len(x)/x[-1]
     new_sample_rate = 200
     num = int(np.ceil((len(y)*new_sample_rate)/sample_rate))
     xx = np.linspace(x[0], x[-1], num)
     
     return f(xx)
+
+def diff_keep_length(signal, sample_rate):
+    """Derive en conservant la longueur du signal. La dérnière valeur est doublée"""
+    signal_dot = np.diff(signal)*sample_rate
+    return np.append(signal_dot,signal_dot[-1])

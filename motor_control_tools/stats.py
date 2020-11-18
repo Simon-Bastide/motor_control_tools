@@ -1,4 +1,4 @@
-from scipy import stats
+import scipy as sp
 from statsmodels.stats.anova import AnovaRM
 import itertools
 import pandas as pd
@@ -42,7 +42,7 @@ def pairwise_ttest_rel(data, dep_var, within, only_significant = False, only_fir
             query2 = indep_var + "==" "'" + combination_of_conditions[1][0] + "' & " + other_indep_var + "==" "'" + combination_of_conditions[1][1] + "'"
         
         if at_least_one_same_cond and only_first_within_comprisons:
-            ttest = stats.ttest_rel(data.query(query1)[dep_var],
+            ttest = sp.stats.ttest_rel(data.query(query1)[dep_var],
                                         data.query(query2)[dep_var])
             
             if len(within) == 1:
@@ -66,12 +66,12 @@ def remove_outliers(df, columns = ['all'], zscore = 3):
     new_df = pd.DataFrame()
     for colName, colData in df.iteritems():
         if columns == ['all']:
-            outliers = np.abs(stats.zscore(colData)) < zscore
+            outliers = np.abs(sp.stats.zscore(colData)) < zscore
             data_without_outliers = colData[outliers]
             new_df = new_df.assign(**{colName : data_without_outliers})
         else:
             if colName in columns:
-                outliers = np.abs(stats.zscore(colData)) < zscore
+                outliers = np.abs(sp.stats.zscore(colData)) < zscore
                 data_without_outliers = colData[outliers]
                 new_df = new_df.assign(**{colName : data_without_outliers})
             else:
